@@ -46,10 +46,11 @@ pipeline {
         stage('Deploy on EC2 Agent') {
             agent { label 'ubuntu' }
             steps {
-                sh "docker pull ${DOCKER_IMAGE}"
-                sh 'docker stop jenkins-app || true'
-                sh 'docker rm jenkins-app || true'
-                sh "docker run -d -p 3000:3000 --name jenkins-app ${DOCKER_IMAGE}"
+              sh "sudo docker build -t ${DOCKER_IMAGE} ."
+            sh 'echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin'
+            sh "sudo docker push ${DOCKER_IMAGE}"
+            sh "sudo docker run -d -p 3000:3000 --name jenkins-app ${DOCKER_IMAGE}"
+
             }
         }
     }
