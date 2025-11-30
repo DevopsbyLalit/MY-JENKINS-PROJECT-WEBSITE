@@ -18,6 +18,19 @@ pipeline {
             }
         }
 
+        stage('Debug user & docker access') {
+  steps {
+    sh '''
+      echo "whoami: $(whoami)"
+      echo "groups: $(groups)"
+      ls -l /var/run/docker.sock
+      docker --version || true
+      docker ps || true
+    '''
+  }
+}
+
+
         stage('Login & Push to DockerHub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
