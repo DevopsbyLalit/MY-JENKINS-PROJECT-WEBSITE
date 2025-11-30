@@ -12,24 +12,25 @@ pipeline {
             }
         }
 
+                stage('Debug user & docker access') {
+                    steps {
+                        sh '''
+                           echo "whoami: $(whoami)"
+                           echo "groups: $(groups)"
+                           ls -l /var/run/docker.sock
+                           docker --version || true
+                            docker ps || true
+                           '''
+                           }
+                      }
+
         stage('Build Docker Image') {
             steps {
                 sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
 
-        stage('Debug user & docker access') {
-  steps {
-    sh '''
-      echo "whoami: $(whoami)"
-      echo "groups: $(groups)"
-      ls -l /var/run/docker.sock
-      docker --version || true
-      docker ps || true
-    '''
-  }
-}
-
+        
 
         stage('Login & Push to DockerHub') {
             steps {
