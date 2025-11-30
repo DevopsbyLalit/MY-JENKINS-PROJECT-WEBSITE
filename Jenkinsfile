@@ -8,14 +8,14 @@ pipeline {
     stages {
 
         stage('Checkout') {
-            agent { label 'agent2' }
+            agent { label 'ubuntu' }
             steps {
                 git branch: 'main', url: 'https://github.com/DevopsbyLalit/MY-JENKINS-PROJECT-WEBSITE.git'
             }
         }
 
         stage('Debug user & docker access') {
-            agent { label 'agent2' }
+            agent { label 'ubutnu' }
             steps {
                 sh '''
                     echo "whoami: $(whoami)"
@@ -31,14 +31,14 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            agent { label 'agent2' }
+            agent { label 'ubuntu' }
             steps {
                 sh "sudo docker build -t ${DOCKER_IMAGE} ."
             }
         }
 
         stage('Push to DockerHub') {
-            agent { label 'agent2' }
+            agent { label 'ubuntu' }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
@@ -50,7 +50,7 @@ pipeline {
         }
 
         stage('Deploy on EC2') {
-            agent { label 'agent2' }
+            agent { label 'ubuntu' }
             steps {
                 sh '''
                     sudo docker pull ${DOCKER_IMAGE}
