@@ -25,7 +25,7 @@ pipeline {
                       }
 
        stage('Build Docker Image') {
-    agent { label 'ubuntu' }   // <-- ADD THIS
+    agent { label 'agent2' }   // <-- ADD THIS
     steps {
         sh "docker build -t ${DOCKER_IMAGE} ."
     }
