@@ -1,56 +1,63 @@
 pipeline {
-    agent {label 'ubuntu'}
+    agent label { 'ubuntu '}
 
     environment {
-        DOCKER_IMAGE = "lalit25/jenkins-demo:latest"
+        DOCKER_IMAGE = "DevopsbyLalit/jenkins-demo:latest"
     }
 
     stages {
-        stage('Clone') {
+
+        stage('Checkout') {
+            agent { label 'agent2' }
             steps {
                 git branch: 'main', url: 'https://github.com/DevopsbyLalit/MY-JENKINS-PROJECT-WEBSITE.git'
             }
         }
 
-                stage('Debug user & docker access') {
-                    steps {
-                        sh '''
-                           echo "whoami: $(whoami)"
-                           echo "groups: $(groups)"
-                           ls -l /var/run/docker.sock
-                           docker --version || true
-                            docker ps || true
-                           '''
-                           }
-                      }
+        stage('Debug user & docker access') {
+            agent { label 'agent2' }
+            steps {
+                sh '''
+                    echo "whoami: $(whoami)"
+                    echo "groups: $(groups)"
+                    echo "docker.sock perms:"
+                    ls -l /var/run/docker.sock
 
-       stage('Build Docker Image') {
-    agent { label 'ubuntu' }   // <-- ADD THIS
-    steps {
-        sh "docker build -t ${DOCKER_IMAGE} ."
-    }
-}
+                    echo "Testing docker with SUDO"
+                    sudo docker --version
+                    sudo docker ps
+                '''
+            }
+        }
 
+        stage('Build Docker Image') {
+            agent { label 'agent2' }
+            steps {
+                sh "sudo docker build -t ${DOCKER_IMAGE} ."
+            }
+        }
 
-        
-
-        stage('Login & Push to DockerHub') {
+        stage('Push to DockerHub') {
+            agent { label 'agent2' }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
-                    sh "docker push ${DOCKER_IMAGE}"
+                    sh '''
+                        echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin
+                        sudo docker push ${DOCKER_IMAGE}
+                    '''
                 }
             }
         }
 
-        stage('Deploy on EC2 Agent') {
-            agent { label 'ubuntu' }
+        stage('Deploy on EC2') {
+            agent { label 'agent2' }
             steps {
-              sh "sudo docker build -t ${DOCKER_IMAGE} ."
-            sh 'echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin'
-            sh "sudo docker push ${DOCKER_IMAGE}"
-            sh "sudo docker run -d -p 3000:3000 --name jenkins-app ${DOCKER_IMAGE}"
-
+                sh '''
+                    sudo docker pull ${DOCKER_IMAGE}
+                    sudo docker stop jenkins-app || true
+                    sudo docker rm jenkins-app || true
+                    sudo docker run -d -p 3000:3000 --name jenkins-app ${DOCKER_IMAGE}
+                '''
             }
         }
     }
