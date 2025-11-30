@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'lalit'}
+    agent {label 'ubuntu'}
 
     environment {
         DOCKER_IMAGE = "lalit25/jenkins-demo:latest"
@@ -28,7 +28,7 @@ pipeline {
         }
 
         stage('Deploy on EC2 Agent') {
-            agent { label 'lalit' }
+            agent { label 'ubuntu' }
             steps {
                 sh "docker pull ${DOCKER_IMAGE}"
                 sh 'docker stop jenkins-app || true'
